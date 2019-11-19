@@ -30,6 +30,10 @@ defaults
 
 frontend rgw-frontend
     bind *:{{ haproxy_frontend_port }}
+{% if haproxy_frontend_ssl_termination and radosgw_frontend_ssl_certificate %}
+    bind *:{{ haproxy_frontend_ssl_port }} ssl crt {{ radosgw_frontend_ssl_certificate }}
+    redirect scheme https code 301 if !{ ssl_fc }
+{% endif %}
     default_backend rgw-backend
 
 backend rgw-backend

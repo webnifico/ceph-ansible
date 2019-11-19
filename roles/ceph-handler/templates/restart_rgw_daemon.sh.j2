@@ -6,7 +6,8 @@ HOST_NAME="{{ ansible_hostname }}"
 RGW_NUMS={{ radosgw_num_instances }}
 RGW_BASE_PORT={{ radosgw_frontend_port }}
 RGW_FRONTEND_SSL_CERT={{ radosgw_frontend_ssl_certificate }}
-if [ -n "$RGW_FRONTEND_SSL_CERT" ]; then
+RGW_HAPROXY_SSL_TERMINATION={{ haproxy_frontend_ssl_termination }}
+if [ -n "$RGW_FRONTEND_SSL_CERT" ] && [ $RGW_HAPROXY_SSL_TERMINATION == 'False' ]; then
     RGW_PROTOCOL=https
 else
     RGW_PROTOCOL=http
