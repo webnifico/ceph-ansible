@@ -13,20 +13,10 @@ haproxy_frontend_ssl_termination: False
 #  - address: 192.168.238.250
 #    netmask: 16
 #    interface: br-storage
-#    multicast_address: ""
-#    virtual_route_gateway: ""
-#    virtual_route_source: ""
+#    virtual_route_gateway:
+#    virtual_route_source:
 #  - address: 192.168.238.251
 #    netmask: 24
 #    interface: br-provider1
-#    multicast_address: ""
-#    virtual_route_gateway: ""
-#    virtual_route_source: ""
-
-#
-#virtual_ips:
-#   - 192.168.238.250
-#   - 192.168.238.251
-#
-#virtual_ip_netmask: 24
-#virtual_ip_interface: ens33
+#    virtual_route_gateway:
+#    virtual_route_source:
