@@ -27,6 +27,9 @@ vrrp_instance {{ instance['name'] }} {
     virtual_ipaddress {
         {{ instance['vip'] }}/{{ instance['netmask'] }} dev {{ instance['interface'] }}
     }
+{% if instance['virtual_route_source'] and instance['virtual_route_gateway'] %}
+    {{ instance['virtual_route_source'] }} via {{ instance['virtual_route_gateway'] }} dev {{ instance['interface'] }}
+{% endif %}
     track_script {
         check_haproxy
     }
