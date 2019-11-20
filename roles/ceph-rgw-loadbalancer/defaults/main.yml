@@ -8,6 +8,21 @@
 haproxy_frontend_port: 80
 haproxy_frontend_ssl_port: 443
 haproxy_frontend_ssl_termination: False
+
+#virtual_ips:
+#  - address: 192.168.238.250
+#    netmask: 16
+#    interface: br-storage
+#    multicast_address: ""
+#    virtual_route_gateway: ""
+#    virtual_route_source: ""
+#  - address: 192.168.238.251
+#    netmask: 24
+#    interface: br-provider1
+#    multicast_address: ""
+#    virtual_route_gateway: ""
+#    virtual_route_source: ""
+
 #
 #virtual_ips:
 #   - 192.168.238.250

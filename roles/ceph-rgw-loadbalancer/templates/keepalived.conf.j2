@@ -25,7 +25,7 @@ vrrp_instance {{ instance['name'] }} {
         auth_pass 1234
     }
     virtual_ipaddress {
-        {{ instance['vip'] }}/{{ virtual_ip_netmask }} dev {{ virtual_ip_interface }}
+        {{ instance['vip'] }}/{{ instance['netmask'] }} dev {{ instance['interface'] }}
     }
     track_script {
         check_haproxy
