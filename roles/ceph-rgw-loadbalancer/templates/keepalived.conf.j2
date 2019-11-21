@@ -15,8 +15,8 @@ vrrp_script check_haproxy {
 
 {% for instance in vrrp_instances %}
 vrrp_instance {{ instance['name'] }} {
-    state {{ 'MASTER' if ansible_hostname == controller002-stg.core-x.net else 'BACKUP' }}
-    priority {{ '100' if ansible_hostname == controller002-stg.core-x.net else '90' }}
+    state {{ 'MASTER' if ansible_hostname == 'controller002-stg.core-x.net' else 'BACKUP' }}
+    priority {{ '100' if ansible_hostname == 'controller002-stg.core-x.net' else '90' }}
     interface {{ instance['interface'] }}
     virtual_router_id {{ 50 + loop.index }}
     garp_master_delay 10
