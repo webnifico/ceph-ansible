@@ -11,12 +11,12 @@ haproxy_frontend_ssl_termination: False
 
 #virtual_ips:
 #  - address: 192.168.238.250
-#    netmask: 16
-#    interface: br-storage
+#    netmask: 24
+#    interface: ens33
 #    virtual_route_gateway:
 #    virtual_route_source:
-#  - address: 192.168.238.251
+#  - address: 192.168.1.250
 #    netmask: 24
-#    interface: br-provider1
+#    interface: ens34
 #    virtual_route_gateway:
 #    virtual_route_source:
