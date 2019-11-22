@@ -31,8 +31,8 @@ vrrp_instance {{ instance['name'] }} {
 {% if instance['virtual_route_source'] and instance['virtual_route_gateway'] %}
     virtual_routes {
   {% for source in instance['virtual_route_source'] %} 
-        {{ source }} via {{ instance['virtual_route_gateway'] }} dev {{ instance['interface'] }}
-  {% endfor %}
+        {{ source }} via {{ instance['virtual_route_gateway'] }} dev {{ instance['interface'] }}{{ '\n' }}
+  {%- endfor %}
     }
 {% endif %}
     track_script {
