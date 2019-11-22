@@ -19,4 +19,7 @@ haproxy_frontend_ssl_termination: False
 #    netmask: 24
 #    interface: ens34
 #    virtual_route_gateway: 192.168.1.254
-#    virtual_route_source: 10.10.10.1
+#    virtual_route_source:
+#      - 10.10.10.1
+#      - 10.10.10.2
+#      - 10.10.10.3
