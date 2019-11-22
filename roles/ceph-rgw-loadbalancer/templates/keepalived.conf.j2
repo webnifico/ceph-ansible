@@ -32,7 +32,7 @@ vrrp_instance {{ instance['name'] }} {
     virtual_routes {
   {%- for source in instance['virtual_route_source'] %} 
         {{ source }} via {{ instance['virtual_route_gateway'] }} dev {{ instance['interface'] }}
-  {%- endfor %}
+  {%- endfor %}{{ '\n' }}
     }
 {% endif %}
     track_script {
