@@ -9,6 +9,12 @@ global
     group       haproxy
     daemon
     stats socket /var/lib/haproxy/stats
+    stats socket /var/lib/haproxy/stats
+{% if haproxy_frontend_ssl_termination and radosgw_frontend_ssl_certificate %}
+    tune.ssl.default-dh-param 4096
+    ssl-default-bind-ciphers EECDH+AESGCM:EDH+AESGCM
+    ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+{% endif %}
 
 defaults
     mode                    http
@@ -29,10 +35,10 @@ defaults
     maxconn                 8000
 
 frontend rgw-frontend
-    bind *:{{ haproxy_frontend_port }}
 {% if haproxy_frontend_ssl_termination and radosgw_frontend_ssl_certificate %}
     bind *:{{ haproxy_frontend_ssl_port }} ssl crt {{ radosgw_frontend_ssl_certificate }}
-    redirect scheme https code 301 if !{ ssl_fc }
+{% else %}
+    bind *:{{ haproxy_frontend_port }}
 {% endif %}
     default_backend rgw-backend
 
