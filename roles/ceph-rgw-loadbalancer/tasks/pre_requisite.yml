@@ -1,10 +1,59 @@
 ---
-- name: install haproxy and keepalived
+- name: install haproxy
   package:
-    name: ['haproxy', 'keepalived']
+    name: ['haproxy']
     state: present
   register: result
   until: result is succeeded
+
+==========================================================================
+WIP
+
+- name: install keepalived
+  package:
+    name: ['keepalived']
+    state: present
+  register: result
+  when: keepalived_repository == 'distro'
+  until: result is succeeded
+
+- name: configure keepalived custom repository
+  get_url:
+    url: "{{ keepalived_url }}"
+    dest: "/tmp/keepalived-{{ keepalived_version }}.tar.gz"
+    owner: root
+    group: root
+  when: keepalived_repository == 'version'
+
+- name: check if specified keepalived version already exists
+  shell: "ls /usr/sbin/ | grep keepalived-{{ keepalived_version }}"
+  register: check_keepalived_version
+
+- name: unarchive keepalived
+  unarchive:
+    src: "/tmp/keepalived-{{ keepalived_version }}.tar.gz"
+    dest /tmp/
+  when: check_keepalived_version.rc != 0
+
+- name: build keepalived
+  command: "/tmp/keepalived-{{ keepalived_version }}/configure --prefix=/usr/sbin/keepalived-{{ keepalived_version }}"
+  when: check_keepalived_version.rc != 0
+
+- name: install keepalived
+  make:
+    chdir: "/tmp/keepalived-{{ keepalived_version }}/"
+    target: install
+  when: check_keepalived_version.rc != 0
+
+- name: update binary to updated keepalived version
+  file:
+    path: /usr/sbin/keepalived
+    src: "/usr/sbin/keepalived-{{ keepalived_version }}"
+    state: link
+  when: keepalived_update | bool
+
+WIP
+=================================================================================
 
 - name: "generate haproxy configuration file: haproxy.cfg"
   template:

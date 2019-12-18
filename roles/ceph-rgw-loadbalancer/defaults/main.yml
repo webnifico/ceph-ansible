@@ -5,6 +5,10 @@
 # GENERAL #
 ###########
 
+keepalived_repository: distro
+keepalived_url: "https://www.keepalived.org/software/keepalived-{{ keepalived_version }}.tar.gz"
+keepalived_version: 2.0.19
+
 haproxy_frontend_port: 80
 #
 #virtual_ips:
