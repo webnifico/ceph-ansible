@@ -23,16 +23,16 @@
 - name: install non-distro version of keepalived
   block:
 
+    - name: install required packages for keepalived
+      apt:
+        name: ['curl', 'gcc', 'libssl-dev', 'libnl-3-dev', 'libnl-genl-3-dev', 'libsnmp-dev']
+        state: present
+
     - name: check if specified keepalived version already exists
       command: "ls /usr/sbin/keepalived-{{ keepalived_version }}"
       failed_when: false
       changed_when: false
       register: check_keepalived_version
-
-    - name: install required packages for keepalived
-      apt:
-        name: ['curl', 'gcc', 'libssl-dev', 'libnl-3-dev', 'libnl-genl-3-dev', 'libsnmp-dev']
-        state: present
 
     - name: unarchive keepalived
       unarchive:
@@ -41,20 +41,19 @@
         remote_src: true
         owner: root
         group: root
+      when: check_keepalived_version.rc != 0
 
     - name: build keepalived
       command: "./configure --prefix=/usr/sbin/keepalived-{{ keepalived_version }}"
       args:
         chdir: "/tmp/keepalived-{{ keepalived_version }}/"
-      when:
-        - check_keepalived_version.rc != 0
+      when: check_keepalived_version.rc != 0
 
     - name: install keepalived
       make:
         chdir: "/tmp/keepalived-{{ keepalived_version }}/"
         target: install
-      when:
-        - check_keepalived_version.rc != 0
+      when: check_keepalived_version.rc != 0
 
     - name: update binary to updated keepalived version
       file:
@@ -62,9 +61,7 @@
         src: "/usr/sbin/keepalived-{{ keepalived_version }}/sbin/keepalived"
         state: link
         force: true
-  when:
-    - keepalived_version is defined
-    - keepalived_version != 'distro'
+  when: keepalived_version != 'distro'
 
 - name: "generate haproxy configuration file: haproxy.cfg"
   template:
