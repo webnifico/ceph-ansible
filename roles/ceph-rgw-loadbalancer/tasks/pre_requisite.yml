@@ -17,7 +17,6 @@
     name: keepalived
     state: present
   register: result
-  when: keepalived_version == 'distro'
   until: result is succeeded
 
 - name: install non-distro version of keepalived
