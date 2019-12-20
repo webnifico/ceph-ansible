@@ -61,6 +61,7 @@
         src: "/usr/sbin/keepalived-{{ keepalived_version }}/sbin/keepalived"
         state: link
         force: true
+      notify: restart keepalived
   when: keepalived_version != 'distro'
 
 - name: "generate haproxy configuration file: haproxy.cfg"
