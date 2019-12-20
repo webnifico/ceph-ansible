@@ -62,6 +62,7 @@
         state: link
         force: true
   when: keepalived_version != 'distro'
+  notify: restart keepalived
 
 - name: "generate haproxy configuration file: haproxy.cfg"
   template:
