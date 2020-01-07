@@ -17,16 +17,22 @@
     name: keepalived
     state: present
   register: result
-  when: keepalived_version == 'distro'
   until: result is succeeded
 
 - name: install non-distro version of keepalived
   block:
 
-    - name: install required packages for keepalived
+    - name: install required packages for keepalived on debian
       apt:
         name: ['curl', 'gcc', 'libssl-dev', 'libnl-3-dev', 'libnl-genl-3-dev', 'libsnmp-dev']
         state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: install required packages for keepalived on redhat
+      yum:
+        name: ['curl', 'gcc', 'openssl-devel', 'libnl3-devel', 'net-snmp-devel']
+        state: present
+      when: ansible_os_family == 'RedHat'
 
     - name: check if specified keepalived version already exists
       command: "ls /usr/sbin/keepalived-{{ keepalived_version }}"
