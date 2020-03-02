@@ -8,8 +8,9 @@ global
     user        haproxy
     group       haproxy
     daemon
-    stats socket /var/lib/haproxy/stats
+    stats socket /var/lib/haproxy/stats {% if haproxy_stats_socket_enabled %}mode {{ haproxy_stats_socket_mode }} group {{ haproxy_stats_socket_group }}{% endif %}
 {% if haproxy_frontend_ssl_termination and radosgw_frontend_ssl_certificate %}
+
     tune.ssl.default-dh-param 4096
     ssl-default-bind-ciphers EECDH+AESGCM:EDH+AESGCM
     ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
