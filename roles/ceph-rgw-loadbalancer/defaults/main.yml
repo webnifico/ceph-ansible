@@ -12,6 +12,9 @@ haproxy_frontend_port: 80
 haproxy_frontend_ssl_port: 443
 haproxy_frontend_ssl_termination: False
 
+haproxy_stats_socket_group: root
+haproxy_stats_socket_mode: '0755'
+
 #virtual_ips:
 #  - address: 192.168.238.250
 #    netmask: 24
