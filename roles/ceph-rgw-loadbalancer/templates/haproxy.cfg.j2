@@ -8,7 +8,7 @@ global
     user        haproxy
     group       haproxy
     daemon
-    stats socket /var/lib/haproxy/stats {% if haproxy_stats_socket_enabled %}mode {{ haproxy_stats_socket_mode }} group {{ haproxy_stats_socket_group }}{% endif %}
+    stats socket /var/lib/haproxy/stats mode {{ haproxy_stats_socket_mode }} group {{ haproxy_stats_socket_group }}
 {% if haproxy_frontend_ssl_termination and radosgw_frontend_ssl_certificate %}
 
     tune.ssl.default-dh-param 4096
