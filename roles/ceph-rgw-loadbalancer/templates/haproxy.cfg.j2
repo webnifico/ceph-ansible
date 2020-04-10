@@ -33,7 +33,7 @@ defaults
     maxconn                 8000
 
 frontend rgw-frontend
-{% if hhaproxy_frontend_ssl_termination and proxy_frontend_ssl_certificate %}
+{% if haproxy_frontend_ssl_termination and haproxy_frontend_ssl_certificate %}
     bind *:{{ haproxy_frontend_ssl_port }} ssl crt {{ haproxy_frontend_ssl_certificate }}
 {% else %}
     bind *:{{ haproxy_frontend_port }}
