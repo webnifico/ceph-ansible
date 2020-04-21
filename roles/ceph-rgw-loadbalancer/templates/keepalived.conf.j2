@@ -3,6 +3,9 @@
 
 global_defs {
    router_id CEPH_RGW
+   vrrp_garp_master_refresh 10
+   vrrp_garp_master_refresh_repeat 1
+   vrrp_garp_lower_prio_delay 1
 }
 
 vrrp_script check_haproxy {
