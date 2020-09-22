@@ -5,6 +5,7 @@
 # GENERAL #
 ###########
 
+keepalived_build_dir: /opt
 keepalived_url: "https://www.keepalived.org/software/keepalived-{{ keepalived_version }}.tar.gz"
 keepalived_version: distro
 
