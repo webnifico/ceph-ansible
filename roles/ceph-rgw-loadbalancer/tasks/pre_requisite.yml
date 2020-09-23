@@ -14,7 +14,6 @@
 
 - name: install non-distro version of keepalived
   block:
-
     - name: install required packages for keepalived on debian
       apt:
         name: ['curl', 'gcc', 'libssl-dev', 'libnl-3-dev', 'libnl-genl-3-dev', 'libsnmp-dev']
@@ -28,39 +27,44 @@
       when: ansible_os_family == 'RedHat'
 
     - name: check if specified keepalived version already exists
-      command: "ls /usr/sbin/keepalived-{{ keepalived_version }}"
+      command: "ls {{ keepalived_build_dir }}/keepalived-{{ keepalived_version }}"
       failed_when: false
       changed_when: false
-      register: check_keepalived_version
+      register: _check_keepalived_version
 
     - name: unarchive keepalived
       unarchive:
         src: "{{ keepalived_url }}"
-        dest: /tmp/
+        dest: "{{ keepalived_build_dir }}/"
         remote_src: true
         owner: root
         group: root
-      when: check_keepalived_version.rc != 0
+      when: _check_keepalived_version.rc != 0
 
     - name: build keepalived
-      command: "./configure --prefix=/usr/sbin/keepalived-{{ keepalived_version }}"
+      command: './configure'
       args:
-        chdir: "/tmp/keepalived-{{ keepalived_version }}/"
-      when: check_keepalived_version.rc != 0
+        chdir: "{{ keepalived_build_dir }}/keepalived-{{ keepalived_version }}/"
+      when: _check_keepalived_version.rc != 0
 
     - name: install keepalived
       make:
-        chdir: "/tmp/keepalived-{{ keepalived_version }}/"
+        chdir: "{{ keepalived_build_dir }}/keepalived-{{ keepalived_version }}/"
         target: install
-      when: check_keepalived_version.rc != 0
-
-    - name: update binary to updated keepalived version
-      file:
-        path: /usr/sbin/keepalived
-        src: "/usr/sbin/keepalived-{{ keepalived_version }}/sbin/keepalived"
-        state: link
-        force: true
       notify: restart keepalived
+      when: _check_keepalived_version.rc != 0
+
+    - name: create systemd override directory
+      file:
+        path: /etc/systemd/system/keepalived.service.d
+        state: directory
+
+    - name: load systemd override file
+      copy:
+        src: keepalived-override.conf
+        dest: /etc/systemd/system/keepalived.service.d/override.conf
+      notify:
+        - restart keepalived
 
   when: keepalived_version != 'distro'
 
