@@ -61,8 +61,8 @@
 
     - name: load systemd override file
       copy:
-        src: keepalived-override.conf
-        dest: /etc/systemd/system/keepalived.service.d/override.conf
+        src: override-execstart.conf
+        dest: /etc/systemd/system/keepalived.service.d/override-execstart.conf
       notify:
         - restart keepalived
 
