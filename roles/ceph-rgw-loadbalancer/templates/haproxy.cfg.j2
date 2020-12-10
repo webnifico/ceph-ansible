@@ -54,7 +54,7 @@ backend rgw-backend
 {% endfor %}
 
 frontend ceph-dashboard
-    bind *:8443 ssl cert {{ radosgw_frontend_ssl_certificate }}
+    bind *:8443 ssl crt {{ radosgw_frontend_ssl_certificate }}
     default_backend ceph-dashboard
 
 backend ceph-dashboard
