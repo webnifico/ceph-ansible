@@ -52,3 +52,18 @@ backend rgw-backend
 	server {{ 'server-' + hostvars[host]['ansible_hostname'] + '-' + instance['instance_name'] }} {{ instance['radosgw_address'] }}:{{ instance['radosgw_frontend_port'] }} weight 100 check
 {% endfor %}
 {% endfor %}
+
+frontend ceph-dashboard
+    bind *:8443 ssl crt {{ radosgw_frontend_ssl_certificate }}
+    default_backend ceph-dashboard
+
+backend ceph-dashboard
+    option forwardfor
+    balance static-rr
+    option httpchk HEAD /
+    http-check expect status 200
+{% for host in groups[rgw_group_name] %}
+{% for instance in hostvars[host]['rgw_instances'] %}
+	server {{ 'server-' + hostvars[host]['ansible_hostname'] + '-mgr' }} {{ instance['radosgw_address'] }}:8008 weight 100 check
+{% endfor %}
+{% endfor %}
