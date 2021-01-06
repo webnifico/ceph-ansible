@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 import datetime
 import copy
 import json
@@ -139,12 +140,6 @@ options:
             - Results will be returned in json format.
             - Only applicable if action is 'batch'.
         required: false
-    containerized:
-        description:
-            - Wether or not this is a containerized cluster. The value is
-            assigned or not depending on how the playbook runs.
-        required: false
-        default: None
     list:
         description:
             - List potential Ceph LVM metadata on a device
@@ -217,20 +212,21 @@ def container_exec(binary, container_image):
     return command_exec
 
 
-def build_ceph_volume_cmd(action, container_image, cluster=None):
+def build_cmd(action, container_image, cluster='ceph', binary='ceph-volume'):
     '''
     Build the ceph-volume command
     '''
 
+    _binary = binary
+
     if container_image:
-        binary = 'ceph-volume'
         cmd = container_exec(
             binary, container_image)
     else:
-        binary = ['ceph-volume']
+        binary = [binary]
         cmd = binary
 
-    if cluster:
+    if _binary == 'ceph-volume':
         cmd.extend(['--cluster', cluster])
 
     cmd.extend(action)
@@ -313,7 +309,7 @@ def batch(module, container_image):
 
     # Build the CLI
     action = ['lvm', 'batch']
-    cmd = build_ceph_volume_cmd(action, container_image, cluster)
+    cmd = build_cmd(action, container_image, cluster)
     cmd.extend(['--%s' % objectstore])
     cmd.append('--yes')
 
@@ -396,7 +392,7 @@ def prepare_or_create_osd(module, action, container_image):
 
     # Build the CLI
     action = ['lvm', action]
-    cmd = build_ceph_volume_cmd(action, container_image, cluster)
+    cmd = build_cmd(action, container_image, cluster)
     cmd.extend(['--%s' % objectstore])
     cmd.append('--data')
     cmd.append(data)
@@ -435,12 +431,13 @@ def list_osd(module, container_image):
 
     # Build the CLI
     action = ['lvm', 'list']
-    cmd = build_ceph_volume_cmd(action, container_image, cluster)
+    cmd = build_cmd(action, container_image, cluster)
     if data:
         cmd.append(data)
     cmd.append('--format=json')
 
     return cmd
+
 
 def list_storage_inventory(module, container_image):
     '''
@@ -448,10 +445,11 @@ def list_storage_inventory(module, container_image):
     '''
 
     action = ['inventory']
-    cmd = build_ceph_volume_cmd(action, container_image)
+    cmd = build_cmd(action, container_image)
     cmd.append('--format=json')
 
     return cmd
+
 
 def activate_osd():
     '''
@@ -461,10 +459,28 @@ def activate_osd():
     # build the CLI
     action = ['lvm', 'activate']
     container_image = None
-    cmd = build_ceph_volume_cmd(action, container_image)
+    cmd = build_cmd(action, container_image)
     cmd.append('--all')
 
     return cmd
+
+
+def is_lv(module, vg, lv, container_image):
+    '''
+    Check if an LV exists
+    '''
+
+    args = ['--noheadings', '--reportformat', 'json', '--select', 'lv_name={},vg_name={}'.format(lv, vg)]  # noqa E501
+
+    cmd = build_cmd(args, container_image, binary='lvs')
+
+    rc, cmd, out, err = exec_command(module, cmd)
+
+    result = json.loads(out)['report'][0]['lv']
+    if rc == 0 and len(result) > 0:
+        return True
+    else:
+        return False
 
 
 def zap_devices(module, container_image):
@@ -489,7 +505,7 @@ def zap_devices(module, container_image):
 
     # build the CLI
     action = ['lvm', 'zap']
-    cmd = build_ceph_volume_cmd(action, container_image)
+    cmd = build_cmd(action, container_image)
     if destroy:
         cmd.append('--destroy')
 
@@ -541,7 +557,6 @@ def run_module():
         block_db_devices=dict(type='list', required=False, default=[]),
         wal_devices=dict(type='list', required=False, default=[]),
         report=dict(type='bool', required=False, default=False),
-        containerized=dict(type='str', required=False, default=False),
         osd_fsid=dict(type='str', required=False),
         destroy=dict(type='bool', required=False, default=True),
     )
@@ -555,14 +570,14 @@ def run_module():
         changed=False,
         stdout='',
         stderr='',
-        rc='',
+        rc=0,
         start='',
         end='',
         delta='',
     )
 
     if module.check_mode:
-        return result
+        module.exit_json(**result)
 
     # start execution
     startd = datetime.datetime.now()
@@ -595,8 +610,7 @@ def run_module():
 
         if out_dict:
             data = module.params['data']
-            result['stdout'] = 'skipped, since {0} is already used for an osd'.format(  # noqa E501
-            data)
+            result['stdout'] = 'skipped, since {0} is already used for an osd'.format(data)  # noqa E501
             result['rc'] = 0
             module.exit_json(**result)
 
@@ -615,8 +629,33 @@ def run_module():
 
     elif action == 'zap':
         # Zap the OSD
-        rc, cmd, out, err = exec_command(
-            module, zap_devices(module, container_image))
+        skip = []
+        for device_type in ['journal', 'data', 'db', 'wal']:
+            # 1/ if we passed vg/lv
+            if module.params.get('{}_vg'.format(device_type), None) and module.params.get(device_type, None):  # noqa E501
+                # 2/ check this is an actual lv/vg
+                ret = is_lv(module, module.params['{}_vg'.format(device_type)], module.params[device_type], container_image)  # noqa E501
+                skip.append(ret)
+                # 3/ This isn't a lv/vg device
+                if not ret:
+                    module.params['{}_vg'.format(device_type)] = False
+                    module.params[device_type] = False
+            # 4/ no journal|data|db|wal|_vg was passed, so it must be a raw device  # noqa E501
+            elif not module.params.get('{}_vg'.format(device_type), None) and module.params.get(device_type, None):  # noqa E501
+                skip.append(True)
+
+        cmd = zap_devices(module, container_image)
+
+        if any(skip) or module.params.get('osd_fsid', None):
+            rc, cmd, out, err = exec_command(
+                module, cmd)
+            for scan_cmd in ['vgscan', 'lvscan']:
+                module.run_command([scan_cmd, '--cache'])
+        else:
+            out = 'Skipped, nothing to zap'
+            err = ''
+            changed = False
+            rc = 0
 
     elif action == 'list':
         # List Ceph LVM Metadata on a device
@@ -649,10 +688,17 @@ def run_module():
         try:
             report_result = json.loads(out)
         except ValueError:
-            strategy_change = "strategy changed" in out
-            if strategy_change:
-                out = json.dumps(
-                    {"changed": False, "stdout": out.rstrip("\r\n")})
+            strategy_changed_in_out = "strategy changed" in out
+            strategy_changed_in_err = "strategy changed" in err
+            strategy_changed = strategy_changed_in_out or \
+                strategy_changed_in_err
+            if strategy_changed:
+                if strategy_changed_in_out:
+                    out = json.dumps({"changed": False,
+                                      "stdout": out.rstrip("\r\n")})
+                elif strategy_changed_in_err:
+                    out = json.dumps({"changed": False,
+                                      "stderr": err.rstrip("\r\n")})
                 rc = 0
                 changed = False
             else:
@@ -664,15 +710,22 @@ def run_module():
                 rc=rc,
                 changed=changed,
             )
-            if strategy_change:
+            if strategy_changed:
                 module.exit_json(**result)
             module.fail_json(msg='non-zero return code', **result)
 
         if not report:
-            # if not asking for a report, let's just run the batch command
-            changed = report_result['changed']
-            if changed:
-                # Batch prepare the OSD
+            if 'changed' in report_result:
+                # we have the old batch implementation
+                # if not asking for a report, let's just run the batch command
+                changed = report_result['changed']
+                if changed:
+                    # Batch prepare the OSD
+                    rc, cmd, out, err = exec_command(
+                        module, batch(module, container_image))
+            else:
+                # we have the refactored batch, its idempotent so lets just
+                # run it
                 rc, cmd, out, err = exec_command(
                     module, batch(module, container_image))
         else:

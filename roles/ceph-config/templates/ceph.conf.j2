@@ -20,7 +20,6 @@ osd crush chooseleaf type = 0
 {% set nb_client = groups.get(client_group_name, []) | length | int %}
 {% set nb_osd = groups.get(osd_group_name, []) | length | int %}
 {% if inventory_hostname in groups.get(client_group_name, []) and not inventory_hostname == groups.get(client_group_name, []) | first %}
-{% set ceph_release = hostvars[groups[client_group_name][0]]['ceph_release'] %}
 {% endif %}
 
 {% if nb_mon > 0 and inventory_hostname in groups.get(mon_group_name, []) %}
@@ -89,7 +88,7 @@ filestore xattr use omap = true
 {% if osd_objectstore == 'bluestore' %}
 {% set _num_osds = num_osds | default(0) | int %}
 [osd]
-{% if is_hci and _num_osds > 0 %}
+{% if is_hci | bool and _num_osds > 0 %}
 {# hci_safety_factor is the safety factor for HCI deployments #}
 {% if ansible_memtotal_mb * 1048576 * hci_safety_factor / _num_osds > osd_memory_target %}
 {% set _osd_memory_target = (ansible_memtotal_mb * 1048576 * hci_safety_factor / _num_osds) | int %}
@@ -105,15 +104,14 @@ osd memory target = {{ _osd_memory_target | default(osd_memory_target) }}
 {% endif %}
 
 {% if inventory_hostname in groups.get(rgw_group_name, []) %}
-{% for host in groups[rgw_group_name] %}
-{% set _rgw_hostname = hostvars[host]['rgw_hostname'] | default(hostvars[host]['ansible_hostname']) %}
+{% set _rgw_hostname = hostvars[inventory_hostname]['rgw_hostname'] | default(hostvars[inventory_hostname]['ansible_hostname']) %}
 {# {{ hostvars[host]['rgw_hostname'] }} for backward compatibility, fqdn issues. See bz1580408 #}
-{% if hostvars[host]['rgw_instances'] is defined %}
-{% for instance in hostvars[host]['rgw_instances'] %}
+{% if hostvars[inventory_hostname]['rgw_instances'] is defined %}
+{% for instance in hostvars[inventory_hostname]['rgw_instances'] %}
 [client.rgw.{{ _rgw_hostname + '.' + instance['instance_name'] }}]
 host = {{ _rgw_hostname }}
 keyring = /var/lib/ceph/radosgw/{{ cluster }}-rgw.{{ _rgw_hostname + '.' + instance['instance_name'] }}/keyring
-log file = /var/log/ceph/{{ cluster }}-rgw-{{ hostvars[host]['ansible_hostname'] + '.' + instance['instance_name'] }}.log
+log file = /var/log/ceph/{{ cluster }}-rgw-{{ hostvars[inventory_hostname]['ansible_hostname'] + '.' + instance['instance_name'] }}.log
 {% set _rgw_binding_socket = instance['radosgw_address'] | default(_radosgw_address) | string + ':' + instance['radosgw_frontend_port'] | default(radosgw_frontend_port) | string %}
 {%- macro frontend_line(frontend_type) -%}
 {%- if frontend_type == 'civetweb' -%}
@@ -133,7 +131,6 @@ rgw_zone = {{ instance['rgw_zone'] }}
 {% endif %}
 {% endfor %}
 {% endif %}
-{% endfor %}
 {% endif %}
 
 {% if inventory_hostname in groups.get(nfs_group_name, []) and inventory_hostname not in groups.get(rgw_group_name, []) %}

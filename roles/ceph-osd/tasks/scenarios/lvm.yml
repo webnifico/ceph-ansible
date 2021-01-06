@@ -11,11 +11,11 @@
     db_vg: "{{ item.db_vg|default(omit) }}"
     wal: "{{ item.wal|default(omit) }}"
     wal_vg: "{{ item.wal_vg|default(omit) }}"
-    crush_device_class: "{{ item.crush_device_class|default(omit) }}"
+    crush_device_class: "{{ item.crush_device_class | default(crush_device_class) | default(omit) }}"
     dmcrypt: "{{ dmcrypt|default(omit) }}"
     action: "{{ 'prepare' if containerized_deployment else 'create' }}"
   environment:
-    CEPH_VOLUME_DEBUG: 1
+    CEPH_VOLUME_DEBUG: "{{ ceph_volume_debug }}"
     CEPH_CONTAINER_IMAGE: "{{ ceph_docker_registry + '/' + ceph_docker_image + ':' + ceph_docker_image_tag if containerized_deployment else None }}"
     CEPH_CONTAINER_BINARY: "{{ container_binary }}"
     PYTHONIOENCODING: utf-8

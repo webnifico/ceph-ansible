@@ -35,7 +35,6 @@ rgw_create_pools:
     ec_profile: myecprofile
     ec_k: 2
     ec_m: 1
-ceph_osd_docker_run_script_path: /var/tmp
 osd_objectstore: "bluestore"
 lvm_volumes:
   - data: data-lv1
@@ -44,3 +43,6 @@ lvm_volumes:
     data_vg: test_group
     db: journal1
     db_vg: journals
+ceph_docker_registry: quay.ceph.io
+ceph_docker_image: ceph-ci/daemon
+ceph_docker_image_tag: latest-octopus

@@ -26,10 +26,12 @@
 
 - name: fail on unsupported CentOS release
   fail:
-    msg: "CentOS release not supported {{ ansible_distribution_major_version }}"
+    msg: "CentOS release not supported {{ ansible_distribution_major_version }} with dashboard"
   when:
     - ansible_distribution == 'CentOS'
-    - ansible_distribution_major_version | int != 8
+    - ansible_distribution_major_version | int == 7
+    - not containerized_deployment | bool
+    - dashboard_enabled | bool
 
 - name: red hat based systems tasks
   when:
@@ -39,7 +41,7 @@
     - name: fail on unsupported distribution for red hat ceph storage
       fail:
         msg: "Distribution not supported {{ ansible_distribution_version }} by Red Hat Ceph Storage, only RHEL >= 8.2"
-      when: ansible_distribution_version | version_compare('8.2', '<')
+      when: ansible_distribution_version is version('8.2', '<')
 
     - name: subscription manager related tasks
       when: ceph_repository_type == 'cdn'
@@ -54,7 +56,7 @@
         - name: fail on unregistered red hat rhcs linux
           fail:
             msg: "You must register your machine with subscription-manager"
-          when: subscription.rc != '0'
+          when: subscription.rc != 0
 
 - name: fail on unsupported distribution for ubuntu cloud archive
   fail:

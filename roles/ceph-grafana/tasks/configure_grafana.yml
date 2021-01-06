@@ -44,12 +44,14 @@
     - not ansible_os_family in ['RedHat', 'Suse']
 
 - name: write grafana.ini
-  template:
+  config_template:
     src: grafana.ini.j2
     dest: /etc/grafana/grafana.ini
     owner: "{{ grafana_uid }}"
     group: "{{ grafana_uid }}"
     mode: 0640
+    config_type: ini
+    config_overrides: "{{ grafana_conf_overrides }}"
 
 - name: write datasources provisioning config file
   template:
@@ -75,6 +77,7 @@
     owner: "{{ grafana_uid }}"
     group: "{{ grafana_uid }}"
     mode: 0640
+    remote_src: "{{ dashboard_tls_external | bool }}"
   when:
     - grafana_crt | length > 0
     - dashboard_protocol == "https"
@@ -86,6 +89,7 @@
     owner: "{{ grafana_uid }}"
     group: "{{ grafana_uid }}"
     mode: 0440
+    remote_src: "{{ dashboard_tls_external | bool }}"
   when:
     - grafana_key | length > 0
     - dashboard_protocol == "https"

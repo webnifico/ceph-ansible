@@ -20,8 +20,8 @@
           register: update_ganesha_apt_cache
           retries: 5
           delay: 2
-          until: update_ganesha_apt_cache | success
-          when: add_ganesha_apt_repo | changed
+          until: update_ganesha_apt_cache is success
+          when: add_ganesha_apt_repo is changed
 
     - name: debian based systems - dev repos specific tasks
       when:
@@ -49,13 +49,6 @@
         - (ceph_origin == 'repository' or ceph_origin == 'distro')
         - ceph_repository != 'rhcs'
       block:
-        - name: install jemalloc for debian
-          apt:
-            name: libjemalloc1
-            state: "{{ (upgrade_ceph_packages|bool) | ternary('latest','present') }}"
-            update_cache: yes
-          register: result
-          until: result is succeeded
         - name: install nfs rgw/cephfs gateway - debian
           apt:
             name: ['nfs-ganesha-rgw', 'radosgw']
