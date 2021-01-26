@@ -4,6 +4,11 @@
     name: "ceph-radosgw@rgw.{{ ansible_hostname }}.{{ item.instance_name }}"
     state: restarted
   with_items: "{{ rgw_instances }}"
+
+- name: restart ceph rgws check
+  debug:
+    msg: "notify restart ceph rgws"
+  notify: restart ceph rgws
   when: not haproxy_frontend_ssl_termination
 
 - name: reload haproxy
