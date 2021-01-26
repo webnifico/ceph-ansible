@@ -4,3 +4,10 @@
     name: "ceph-radosgw@rgw.{{ ansible_hostname }}.{{ item.instance_name }}"
     state: restarted
   with_items: "{{ rgw_instances }}"
+  when: not haproxy_frontend_ssl_termination
+
+- name: reload haproxy
+  service:
+    name: haproxy
+    state: reloaded
+  when: haproxy_frontend_ssl_termination

@@ -41,4 +41,6 @@
     group: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
     mode: 0440
   when: radosgw_frontend_ssl_certificate | length > 0 and radosgw_frontend_ssl_certificate_data | length > 0
-  notify: restart ceph rgws
+  notify:
+    - restart ceph rgws
+    - reload haproxy
