@@ -9,4 +9,3 @@
   service:
     name: haproxy
     state: reloaded
-  when: haproxy_frontend_ssl_termination
