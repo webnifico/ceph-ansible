@@ -33,12 +33,28 @@
     - item is not skipped
     - item.item.copy_key | bool
 
-- name: copy SSL certificate & key data to certificate path
+- name: copy SSL certificate & key data to certificate path for rgw
   copy:
     content: "{{ radosgw_frontend_ssl_certificate_data }}"
     dest: "{{ radosgw_frontend_ssl_certificate }}"
     owner: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
     group: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
     mode: 0440
-  when: radosgw_frontend_ssl_certificate | length > 0 and radosgw_frontend_ssl_certificate_data | length > 0
+  when:
+    - radosgw_frontend_ssl_certificate | length > 0
+    - radosgw_frontend_ssl_certificate_data | length > 0
+    - not haproxy_frontend_ssl_termination
   notify: restart ceph rgws
+
+- name: copy SSL certificate & key data to certificate path for haproxy
+  copy:
+    content: "{{ radosgw_frontend_ssl_certificate_data }}"
+    dest: "{{ radosgw_frontend_ssl_certificate }}"
+    owner: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
+    group: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
+    mode: 0440
+  when:
+    - radosgw_frontend_ssl_certificate | length > 0
+    - radosgw_frontend_ssl_certificate_data | length > 0
+    - haproxy_frontend_ssl_termination
+  notify: reload haproxy
