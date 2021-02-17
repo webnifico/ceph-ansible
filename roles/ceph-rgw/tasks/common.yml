@@ -46,6 +46,13 @@
     - not haproxy_frontend_ssl_termination
   notify: restart ceph rgws
 
+- name: create SSL directory if it doesnt exist
+  file:
+    path: "{{ radosgw_frontend_ssl_certificate }}"
+    state: directory
+    group: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
+    mode: "0640"
+
 - name: copy SSL certificate & key data to certificate path for haproxy
   copy:
     content: "{{ radosgw_frontend_ssl_certificate_data }}"
