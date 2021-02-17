@@ -36,7 +36,7 @@
 - name: copy SSL certificate & key data to certificate path for rgw
   copy:
     content: "{{ radosgw_frontend_ssl_certificate_data }}"
-    dest: "{{ radosgw_frontend_ssl_certificate }}"
+    dest: "{{ radosgw_frontend_ssl_certificate | regex_replace('[^/]*$')  }}"
     owner: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
     group: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
     mode: 0440
