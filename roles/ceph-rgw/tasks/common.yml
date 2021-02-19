@@ -33,6 +33,11 @@
     - item is not skipped
     - item.item.copy_key | bool
 
+- name: check if haproxy is deployed
+  stat:
+    path: /lib/systemd/system/haproxy.service
+  register: haproxy_service_status
+
 - name: copy SSL certificate & key data to certificate path for rgw
   copy:
     content: "{{ radosgw_frontend_ssl_certificate_data }}"
