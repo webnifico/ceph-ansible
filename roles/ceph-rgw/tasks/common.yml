@@ -36,7 +36,7 @@
 - name: check if haproxy is deployed
   stat:
     path: /lib/systemd/system/haproxy.service
-  register: haproxy_service_status
+  register: haproxy_service_file
 
 - name: copy SSL certificate & key data to certificate path for rgw
   copy:
