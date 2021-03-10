@@ -9,4 +9,4 @@
   service:
     name: haproxy
     state: reloaded
-  when: haproxy_service_file.exists
+  when: haproxy_service_file.stat.exists
